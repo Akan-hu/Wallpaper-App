@@ -1,7 +1,7 @@
 import { View, Text, FlatList, StyleSheet, Pressable } from 'react-native'
 import React, { useState } from 'react'
 import { categories } from '../../constants/data'
-import { hp, wp } from '../../helpers/common'
+import { capatalizeFirstChar, hp, wp } from '../../helpers/common'
 import { theme } from '../../constants/theme'
 import Animated, { FadeInRight } from 'react-native-reanimated'
 
@@ -36,7 +36,7 @@ const Category = ({ item, index, isActive, handleChangeCategory }) => {
         style={style.category(isActive)}
         onPress={() => handleChangeCategory(isActive ? null : item)}
       >
-        <Text style={style.title(isActive)}>{item}</Text>
+        <Text style={style.title(isActive)}>{capatalizeFirstChar(item)}</Text>
       </Pressable>
     </Animated.View>
   )
@@ -54,7 +54,7 @@ const style = StyleSheet.create({
     marginTop: 15,
   }),
   title: (isActive) => ({
-    fontSize: hp(1.6),
+    fontSize: hp(1.7),
     fontWeight: theme.fontWeight.medium,
     color: isActive ? theme.colors.white : theme.colors.neutral(0.8),
   }),

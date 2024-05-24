@@ -7,8 +7,7 @@ import {
   ScrollView,
   TextInput,
 } from 'react-native'
-import React, { useEffect, useRef, useState } from 'react'
-import { StatusBar } from 'expo-status-bar'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { Feather, FontAwesome6, Ionicons } from '@expo/vector-icons'
 import { hp, wp } from '../../helpers/common'
 import { theme } from '../../constants/theme'
@@ -16,7 +15,8 @@ import Categories from '../component/categories'
 import { apiCall } from '../api'
 import ImageGrid from '../component/imageGrid'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-
+import { debounce } from 'lodash'
+let PAGE = 1
 const Home = () => {
   const [searchText, setSearchText] = useState('')
   const inputRef = useRef()
@@ -31,14 +31,45 @@ const Home = () => {
   }, [])
   const fetchImages = async (params = { page: 1 }, append = false) => {
     let res = await apiCall(params)
+
     if (res.success == true && res?.data?.hits) {
       if (append) {
+        {
+          /**   add the new data to the existing data.
+        This uses the spread operator (...) to create a new array that combines the existing data array with the new data from res.data.hits. 
+        */
+        }
         setData([...data, ...res?.data?.hits])
       } else {
+        //replace the existing data with the new data.
         setData([...res?.data?.hits])
       }
     }
   }
+
+  const handleSearch = (text) => {
+    setSearchText(text)
+    if (text.length > 2) {
+      console.log('54')
+      //search for this text
+      PAGE = 1
+      setData([])
+      fetchImages({ PAGE, q: text })
+    }
+    console.log(text)
+    if (text == '') {
+      inputRef?.current?.clear()
+      setSearchText('')
+      console.log('60')
+      //reset results
+      PAGE = 1
+      setData([])
+      fetchImages({ PAGE })
+    }
+  }
+
+  const handleTextDebounce = useCallback(debounce(handleSearch, 500), [])
+
   const { top } = useSafeAreaInsets()
   const paddingTop = top > 0 ? top + 10 : 30
   return (
@@ -46,7 +77,7 @@ const Home = () => {
       {/* <StatusBar style="light" /> */}
       {/** Header */}
       <View style={style.headerContainer}>
-        <Text style={style.pixel}>PaperArt</Text>
+        <Text style={style.pixel}>Find Wallpapers</Text>
         <Pressable>
           <FontAwesome6 name="bars-staggered" size={24} color="black" />
         </Pressable>
@@ -63,14 +94,16 @@ const Home = () => {
           <TextInput
             placeholder="Search for photos..."
             style={style.input}
-            value={searchText}
-            onChangeText={(text) => setSearchText(text)}
+            onChangeText={handleTextDebounce}
             ref={inputRef}
           />
-          {searchText.length > 0 && (
+          {searchText && (
             <Pressable
               style={style.crossIcon}
-              onPress={() => inputRef?.current?.clear()}
+              onPress={() => {
+                // setSearchText('')
+                handleSearch('')
+              }}
             >
               <Ionicons
                 name="close"
@@ -106,7 +139,7 @@ const style = StyleSheet.create({
     fontWeight: theme.fontWeight.bold,
     color: theme.colors.neutral(0.9),
     fontSize: hp(3.5),
-    letterSpacing: 2,
+    letterSpacing: 1,
   },
   searchContainer: {
     flexDirection: 'row',

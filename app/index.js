@@ -1,18 +1,10 @@
-import {
-  View,
-  Text,
-  Image,
-  StyleSheet,
-  TouchableOpacity,
-  Pressable,
-} from 'react-native'
+import { View, Text, Image, StyleSheet, Pressable } from 'react-native'
 import React from 'react'
 import { StatusBar } from 'expo-status-bar'
 import { hp, wp } from '../helpers/common'
 import { LinearGradient } from 'expo-linear-gradient'
 import Animated, { FadeInDown } from 'react-native-reanimated'
 import { theme } from '../constants/theme'
-import { TouchableWithoutFeedback } from 'react-native-web'
 import { useRouter } from 'expo-router'
 
 const index = () => {

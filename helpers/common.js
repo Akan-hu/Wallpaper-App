@@ -20,3 +20,8 @@ export const getImageSize = (height, width) => {
     return 200
   }
 }
+export const capatalizeFirstChar = (str) => {
+  let firstChar = str.charAt(0).toUpperCase()
+  const finalStr = firstChar + str.slice(1)
+  return finalStr
+}

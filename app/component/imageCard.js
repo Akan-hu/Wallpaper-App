@@ -18,7 +18,7 @@ const ImageCard = (props) => {
       <Image
         style={[style.image, getImageHeight()]}
         source={{ uri: item?.webformatURL }}
-        placeholder={{ blurhash }}
+        // placeholder={{ blurhash }}
         transition={100}
       />
     </Pressable>
