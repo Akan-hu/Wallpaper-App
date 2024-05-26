@@ -10,6 +10,7 @@ const formateUrl = (params) => {
     let value = key == 'q' ? encodeURIComponent(params[key]) : params[key]
     url += `&${key}=${value}`
   })
+  console.log(url)
   return url
 }
 export const apiCall = async (param) => {

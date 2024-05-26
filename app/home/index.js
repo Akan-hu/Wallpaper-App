@@ -1,7 +1,6 @@
 import {
   View,
   Text,
-  SafeAreaView,
   Pressable,
   StyleSheet,
   ScrollView,
@@ -16,14 +15,27 @@ import { apiCall } from '../api'
 import ImageGrid from '../component/imageGrid'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { debounce } from 'lodash'
+import FiltersModal from '../component/filtersModal'
 let PAGE = 1
 const Home = () => {
   const [searchText, setSearchText] = useState('')
   const inputRef = useRef()
   const [activeCategory, setActiveCategory] = useState(null)
   const [data, setData] = useState([])
+  const [filters, setFilters] = useState(null)
+  const modalRef = useRef(null)
+
   const handleChangeCategory = (title) => {
+    clearSearch()
     setActiveCategory(title)
+    let params = {
+      PAGE,
+      ...filters,
+    }
+    if (title) {
+      params.category = title
+    }
+    fetchImages(params, false)
   }
 
   useEffect(() => {
@@ -46,25 +58,31 @@ const Home = () => {
       }
     }
   }
+  const clearSearch = () => {
+    inputRef?.current?.clear()
+    setSearchText('')
+    setData([])
+    PAGE = 1
+  }
 
   const handleSearch = (text) => {
     setSearchText(text)
     if (text.length > 2) {
-      console.log('54')
       //search for this text
+      setActiveCategory(null) //resetting category while searching
       PAGE = 1
       setData([])
-      fetchImages({ PAGE, q: text })
+      fetchImages({ PAGE, q: text, ...filters }, false)
     }
     console.log(text)
     if (text == '') {
       inputRef?.current?.clear()
       setSearchText('')
-      console.log('60')
+      setActiveCategory(null) //resetting category while searching
       //reset results
       PAGE = 1
       setData([])
-      fetchImages({ PAGE })
+      fetchImages({ PAGE, ...filters }, false)
     }
   }
 
@@ -72,13 +90,50 @@ const Home = () => {
 
   const { top } = useSafeAreaInsets()
   const paddingTop = top > 0 ? top + 10 : 30
+
+  const openModel = () => {
+    modalRef?.current?.present()
+  }
+
+  const closeModel = () => {
+    modalRef?.current?.close()
+  }
+
+  const applyFilter = () => {
+    if (filters) {
+      page = 1
+      setData([])
+      let params = {
+        page,
+        ...filters,
+      }
+      if (activeCategory) params.category = activeCategory
+      if (searchText) params.q = searchText
+      fetchImages(params, false)
+    }
+    closeModel()
+  }
+  const resetFilters = () => {
+    if (filters) {
+      page = 1
+      setData([])
+      setFilters(null)
+      let params = {
+        page,
+      }
+      if (activeCategory) params.category = activeCategory
+      if (searchText) params.q = searchText
+      fetchImages(params, false)
+    }
+    closeModel()
+  }
   return (
     <View style={{ flex: 1, paddingTop: paddingTop }}>
       {/* <StatusBar style="light" /> */}
       {/** Header */}
       <View style={style.headerContainer}>
         <Text style={style.pixel}>Find Wallpapers</Text>
-        <Pressable>
+        <Pressable onPress={openModel}>
           <FontAwesome6 name="bars-staggered" size={24} color="black" />
         </Pressable>
       </View>
@@ -124,6 +179,15 @@ const Home = () => {
           {data.length > 0 && <ImageGrid data={data} />}
         </View>
       </ScrollView>
+      {/** filter model */}
+      <FiltersModal
+        modalRef={modalRef}
+        closeModel={closeModel}
+        filters={filters}
+        setFilters={setFilters}
+        clearFilter={resetFilters}
+        applyFilter={applyFilter}
+      />
     </View>
   )
 }

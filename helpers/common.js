@@ -25,3 +25,7 @@ export const capatalizeFirstChar = (str) => {
   const finalStr = firstChar + str.slice(1)
   return finalStr
 }
+
+export const capatalizeString = (s) => {
+  return s.charAt(0).toUpperCase() + s.slice(1)
+}
