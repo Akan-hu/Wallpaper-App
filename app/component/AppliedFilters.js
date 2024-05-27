@@ -51,7 +51,7 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.lg,
     padding: color ? 6 : 8,
     gap: 10,
-    borderWidth: color ? 2 : 0,
+    borderWidth: color ? 1 : 0,
     borderColor: color ? item : null,
     marginHorizontal: 6,
     paddingHorizontal: 10,

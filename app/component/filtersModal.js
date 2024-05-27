@@ -8,7 +8,7 @@ import Animated, {
   useAnimatedStyle,
 } from 'react-native-reanimated'
 import { hp } from '../../helpers/common'
-import { theme } from '../../constants/theme'
+import { PRIMARY_COLOR, theme } from '../../constants/theme'
 import { OrderView, SectionVIew } from './SectionVIew'
 import { filtersData } from '../../constants/data'
 
@@ -140,11 +140,12 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: theme.radius.md,
     borderCurve: 'continuous',
-    backgroundColor: theme.colors.neutral(0.8),
+    backgroundColor: PRIMARY_COLOR,
   },
   textApply: {
     color: theme.colors.black,
     fontSize: hp(1.8),
+    fontWeight: theme.fontWeight.semibold,
   },
   textReset: {
     color: theme.colors.white,

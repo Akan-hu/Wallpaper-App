@@ -10,9 +10,9 @@ import {
 } from 'react-native'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { Feather, FontAwesome6, Ionicons } from '@expo/vector-icons'
-import { theme } from '../../constants/theme'
+import { PRIMARY_COLOR, theme } from '../../constants/theme'
 import Categories from '../component/categories'
-import { apiCall } from '../api'
+import { apiCall, videoApiCall } from '../api'
 import ImageGrid from '../component/imageGrid'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { debounce } from 'lodash'
@@ -21,6 +21,8 @@ import AppliedFilters from '../component/AppliedFilters'
 import { useRouter } from 'expo-router'
 import Animated, { FadeInDown } from 'react-native-reanimated'
 import { style } from './homeStyles'
+import MainCategories from '../component/MainCategories'
+import VideoView from '../component/VideoView'
 let page = 1
 const Home = () => {
   const [searchText, setSearchText] = useState('')
@@ -35,6 +37,8 @@ const Home = () => {
   const [isLoading, setIsLoading] = useState(true)
   const [isShowing, setIsShowing] = useState(false)
   const [showScrollUp, setShowScrollUp] = useState(false)
+  const [videoData, setVideoData] = useState([])
+  const [mainTab, setMainTab] = useState('Wallpapers')
 
   const handleChangeCategory = (title) => {
     clearSearch()
@@ -46,11 +50,21 @@ const Home = () => {
     if (title) {
       params.category = title
     }
-    fetchImages(params, false)
+    if (mainTab == 'Wallpapers') {
+      fetchImages(params, false)
+    } else {
+      fetchVideos(params, false)
+    }
+  }
+
+  const hanldleChangeMainCategory = (item) => {
+    setMainTab(item)
+    setActiveCategory(null)
   }
 
   useEffect(() => {
     fetchImages()
+    fetchVideos()
   }, [])
   const fetchImages = async (params = { page: 1 }, append = true) => {
     setIsLoading(true)
@@ -70,6 +84,23 @@ const Home = () => {
     }
   }
 
+  const fetchVideos = async (params = { page: 1 }, append = true) => {
+    setIsLoading(true)
+    let res = await videoApiCall(params)
+    if (res.success && res?.data?.hits) {
+      setIsLoading(false)
+      if (append) {
+        /**   add the new data to the existing data.
+        This uses the spread operator (...) to create a new array that combines the existing data array with the new data from res.data.hits. 
+        */
+
+        setVideoData([...videoData, ...res?.data?.hits])
+      } else {
+        //replace the existing data with the new data.
+        setVideoData([...res?.data?.hits])
+      }
+    }
+  }
   const backAction = () => {
     if (isShowing) {
       modalRef.current?.close()
@@ -198,7 +229,11 @@ const Home = () => {
       }
       if (activeCategory) params.category = activeCategory
       if (searchText) params.q = searchText
-      fetchImages(params, true)
+      if (mainTab == 'Wallpapers') {
+        fetchImages(params, true)
+      } else {
+        fetchVideos(params, true)
+      }
     } else {
       setIsEndReached(false)
     }
@@ -233,7 +268,9 @@ const Home = () => {
       {/** Header */}
       <View style={style.headerContainer}>
         <Pressable onPress={handleScrollUp}>
-          <Text style={style.pixel}>Find Wallpapers</Text>
+          <Text style={style.pixel}>
+            Pixel <Text style={{ color: PRIMARY_COLOR }}>Pic</Text>
+          </Text>
         </Pressable>
 
         <Pressable onPress={openModel} style={{ padding: 10 }}>
@@ -276,6 +313,10 @@ const Home = () => {
             </Pressable>
           )}
         </View>
+        <MainCategories
+          activeTab={mainTab}
+          activeMainCategory={hanldleChangeMainCategory}
+        />
         <View>
           <Categories
             activeCategory={activeCategory}
@@ -291,9 +332,14 @@ const Home = () => {
           />
         )}
         {/** images masonry grid */}
-        <View>
-          {data.length > 0 && <ImageGrid data={data} route={route} />}
-        </View>
+        {mainTab == 'Wallpapers' ? (
+          <View>
+            {data.length > 0 && <ImageGrid data={data} route={route} />}
+          </View>
+        ) : (
+          videoData.length > 0 && <VideoView videoData={videoData} />
+        )}
+
         {/** loader */}
         {isLoading && (
           <View

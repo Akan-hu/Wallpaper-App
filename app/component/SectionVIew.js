@@ -62,7 +62,8 @@ const getBg = (item) => {
     item == 'blue' ||
     item == 'brown' ||
     item == 'black' ||
-    item == 'gray'
+    item == 'gray' ||
+    item == 'red'
   ) {
     return 'white'
   } else {

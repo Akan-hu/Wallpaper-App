@@ -18,3 +18,4 @@ export const theme = {
     xl: 18,
   },
 }
+export const PRIMARY_COLOR = '#8A2BE2'

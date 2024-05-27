@@ -1,5 +1,5 @@
 import { StyleSheet } from 'react-native'
-import { theme } from '../../constants/theme'
+import { PRIMARY_COLOR, theme } from '../../constants/theme'
 import { hp, wp } from '../../helpers/common'
 
 export const style = StyleSheet.create({
@@ -8,7 +8,7 @@ export const style = StyleSheet.create({
     bottom: 0,
     alignSelf: 'center',
     marginBottom: 20,
-    backgroundColor: theme.colors.black,
+    backgroundColor: PRIMARY_COLOR,
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 30,
@@ -20,6 +20,7 @@ export const style = StyleSheet.create({
     color: theme.colors.white,
     padding: 3,
     fontSize: hp(1.8),
+    fontWeight: theme.fontWeight.medium,
     marginLeft: 3,
   },
   headerContainer: {
@@ -31,7 +32,7 @@ export const style = StyleSheet.create({
   pixel: {
     fontWeight: theme.fontWeight.bold,
     color: theme.colors.neutral(0.9),
-    fontSize: hp(3.5),
+    fontSize: hp(3.6),
     letterSpacing: 1,
   },
   searchContainer: {

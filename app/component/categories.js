@@ -2,7 +2,7 @@ import { View, Text, FlatList, StyleSheet, Pressable } from 'react-native'
 import React, { useState } from 'react'
 import { categories } from '../../constants/data'
 import { capatalizeFirstChar, hp, wp } from '../../helpers/common'
-import { theme } from '../../constants/theme'
+import { PRIMARY_COLOR, theme } from '../../constants/theme'
 import Animated, { FadeInRight } from 'react-native-reanimated'
 
 const Categories = ({ activeCategory, handleChangeCategory }) => {
@@ -45,17 +45,17 @@ const style = StyleSheet.create({
   container: { paddingHorizontal: wp(4), gap: 10 },
   category: (isActive) => ({
     paddingHorizontal: 15,
-    backgroundColor: isActive ? theme.colors.neutral(0.8) : theme.colors.white,
+    backgroundColor: isActive ? '#f3e9fc' : theme.colors.white,
     padding: 12,
-    borderWidth: 1,
-    borderColor: theme.colors.grayBG,
+    borderWidth: 0.5,
+    borderColor: isActive ? PRIMARY_COLOR : theme.colors.grayBG,
     borderRadius: theme.radius.lg,
     borderCurve: 'continuous',
   }),
   title: (isActive) => ({
     fontSize: hp(1.7),
     fontWeight: theme.fontWeight.medium,
-    color: isActive ? theme.colors.white : theme.colors.neutral(0.8),
+    color: isActive ? PRIMARY_COLOR : theme.colors.neutral(0.9),
   }),
 })
 export default Categories

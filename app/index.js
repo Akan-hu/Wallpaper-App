@@ -4,7 +4,7 @@ import { StatusBar } from 'expo-status-bar'
 import { hp, wp } from '../helpers/common'
 import { LinearGradient } from 'expo-linear-gradient'
 import Animated, { FadeInDown } from 'react-native-reanimated'
-import { theme } from '../constants/theme'
+import { PRIMARY_COLOR, theme } from '../constants/theme'
 import { useRouter } from 'expo-router'
 
 const index = () => {
@@ -34,13 +34,13 @@ const index = () => {
             style={style.pix}
             entering={FadeInDown.delay(400).springify()}
           >
-            Pixels
+            Pixel Pic
           </Animated.Text>
           <Animated.Text
             style={style.punchline}
             entering={FadeInDown.delay(500).springify()}
           >
-            Every Pixel Tells a Story
+            Beauty beyond the pixels.
           </Animated.Text>
           <Animated.View entering={FadeInDown.delay(600).springify()}>
             <Pressable
@@ -76,7 +76,7 @@ const style = StyleSheet.create({
     fontWeight: theme.fontWeight.medium,
   },
   exploreBtn: {
-    backgroundColor: theme.colors.black,
+    backgroundColor: PRIMARY_COLOR,
     marginBottom: 50,
     padding: 15,
     paddingHorizontal: 60,
@@ -87,7 +87,7 @@ const style = StyleSheet.create({
     color: theme.colors.white,
     fontSize: hp(2),
     letterSpacing: 1,
-    fontWeight: theme.fontWeight.medium,
+    fontWeight: theme.fontWeight.bold,
   },
 })
 export default index
