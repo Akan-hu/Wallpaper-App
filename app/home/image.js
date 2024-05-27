@@ -83,7 +83,6 @@ const ImageScreen = () => {
       setStatus('')
       return uri
     } catch (e) {
-      console.log(e)
       Alert.alert(e?.message)
       setStatus('')
       return null

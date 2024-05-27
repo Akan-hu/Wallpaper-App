@@ -13,15 +13,8 @@ import { OrderView, SectionVIew } from './SectionVIew'
 import { filtersData } from '../../constants/data'
 
 const FiltersModal = (props) => {
-  const {
-    modalRef,
-    closeModel,
-    filters,
-    setFilters,
-    clearFilter,
-    applyFilter,
-  } = props || {}
-  const height = Dimensions.get('window').height
+  const { modalRef, filters, setFilters, clearFilter, applyFilter } =
+    props || {}
   // variables
   const snapPoints = useMemo(() => ['70%', '85%'], [])
   return (

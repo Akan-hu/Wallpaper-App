@@ -14,7 +14,10 @@ const AppliedFilters = ({ filters, removeCurrentFilter }) => {
       {Object.keys(filters).map((key, index) => {
         const shouldShowColor = key == 'colors'
         return (
-          <View style={styles.filterItem(shouldShowColor, filters[key])}>
+          <View
+            style={styles.filterItem(shouldShowColor, filters[key])}
+            key={index}
+          >
             <Text style={styles.filterItemText}>
               {capatalizeFirstChar(filters[key])}
             </Text>

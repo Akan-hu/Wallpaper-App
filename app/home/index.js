@@ -2,14 +2,14 @@ import {
   View,
   Text,
   Pressable,
-  StyleSheet,
   ScrollView,
   TextInput,
   ActivityIndicator,
+  BackHandler,
+  TouchableOpacity,
 } from 'react-native'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { Feather, FontAwesome6, Ionicons } from '@expo/vector-icons'
-import { hp, wp } from '../../helpers/common'
 import { theme } from '../../constants/theme'
 import Categories from '../component/categories'
 import { apiCall } from '../api'
@@ -18,9 +18,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { debounce } from 'lodash'
 import FiltersModal from '../component/filtersModal'
 import AppliedFilters from '../component/AppliedFilters'
-import { useRoute } from '@react-navigation/native'
 import { useRouter } from 'expo-router'
-let PAGE = 1
+import Animated, { FadeInDown } from 'react-native-reanimated'
+import { style } from './homeStyles'
+let page = 1
 const Home = () => {
   const [searchText, setSearchText] = useState('')
   const inputRef = useRef()
@@ -31,12 +32,15 @@ const Home = () => {
   const scrollRef = useRef(null)
   const [isEndReached, setIsEndReached] = useState(false)
   const route = useRouter()
+  const [isLoading, setIsLoading] = useState(true)
+  const [isShowing, setIsShowing] = useState(false)
+  const [showScrollUp, setShowScrollUp] = useState(false)
 
   const handleChangeCategory = (title) => {
     clearSearch()
     setActiveCategory(title)
     let params = {
-      PAGE,
+      page,
       ...filters,
     }
     if (title) {
@@ -49,16 +53,15 @@ const Home = () => {
     fetchImages()
   }, [])
   const fetchImages = async (params = { page: 1 }, append = true) => {
+    setIsLoading(true)
     let res = await apiCall(params)
-    console.log(res?.data?.hits?.length)
-    if (res.success == true && res?.data?.hits) {
+    if (res.success && res?.data?.hits) {
+      setIsLoading(false)
       if (append) {
-        {
-          /**   add the new data to the existing data.
+        /**   add the new data to the existing data.
         This uses the spread operator (...) to create a new array that combines the existing data array with the new data from res.data.hits. 
         */
-        }
-        console.log('if append ', append)
+
         setData([...data, ...res?.data?.hits])
       } else {
         //replace the existing data with the new data.
@@ -66,11 +69,31 @@ const Home = () => {
       }
     }
   }
+
+  const backAction = () => {
+    if (isShowing) {
+      modalRef.current?.close()
+      setIsShowing(false)
+      return true
+    } else if (!isShowing) {
+      route?.back()
+      return true
+    }
+  }
+
+  // Handle back button press to close the modal
+  useEffect(() => {
+    BackHandler.addEventListener('hardwareBackPress', backAction)
+
+    return () =>
+      BackHandler.removeEventListener('hardwareBackPress', backAction)
+  }, [backAction, isShowing])
+
   const clearSearch = () => {
     inputRef?.current?.clear()
     setSearchText('')
     setData([])
-    PAGE = 1
+    page = 1
   }
 
   const handleSearch = (text) => {
@@ -78,9 +101,9 @@ const Home = () => {
     if (text.length > 2) {
       //search for this text
       setActiveCategory(null) //resetting category while searching
-      PAGE = 1
+      page = 1
       setData([])
-      fetchImages({ PAGE, q: text, ...filters }, false)
+      fetchImages({ page, q: text, ...filters }, false)
     }
 
     if (text == '') {
@@ -88,9 +111,9 @@ const Home = () => {
       setSearchText('')
       setActiveCategory(null) //resetting category while searching
       //reset results
-      PAGE = 1
+      page = 1
       setData([])
-      fetchImages({ PAGE, ...filters }, false)
+      fetchImages({ page, ...filters }, false)
     }
   }
 
@@ -101,10 +124,12 @@ const Home = () => {
 
   const openModel = () => {
     modalRef?.current?.present()
+    setIsShowing(true)
   }
 
   const closeModel = () => {
     modalRef?.current?.close()
+    setIsShowing(false)
   }
 
   const applyFilter = () => {
@@ -122,6 +147,7 @@ const Home = () => {
     closeModel()
   }
   const resetFilters = () => {
+    handleScrollUp()
     if (filters) {
       page = 1
       setData([])
@@ -151,24 +177,44 @@ const Home = () => {
     fetchImages(params, false)
   }
 
+  const handleBackToTop = (scrollOffSet) => {
+    // Show "Back to Top" button if scrolled more than 100 pixels
+    if (scrollOffSet > 100) {
+      setShowScrollUp(true)
+    } else {
+      setShowScrollUp(false)
+    }
+  }
+
+  const fetchDataOfNextPage = () => {
+    //if current page has enough data only then call for next page data
+    if (data?.length > 23) {
+      setIsEndReached(true) //state is used so that API does't call multiple times
+
+      ++page
+      let params = {
+        page,
+        ...filters,
+      }
+      if (activeCategory) params.category = activeCategory
+      if (searchText) params.q = searchText
+      fetchImages(params, true)
+    } else {
+      setIsEndReached(false)
+    }
+  }
   const handleScroll = (e) => {
     const contentHeight = e.nativeEvent.contentSize.height
     const scrollViewHeight = e.nativeEvent.layoutMeasurement.height
     const scrollOffSet = e.nativeEvent.contentOffset.y
     const bottomPosition = contentHeight - scrollViewHeight
 
+    handleBackToTop(scrollOffSet)
+
     // Pagination
     if (scrollOffSet >= bottomPosition - 1) {
       if (!isEndReached) {
-        setIsEndReached(true) //state is used so that API does't call multiple times
-        ++PAGE
-        let params = {
-          PAGE,
-          ...filters,
-        }
-        if (activeCategory) params.category = activeCategory
-        if (searchText) params.q = searchText
-        fetchImages(params, true)
+        fetchDataOfNextPage()
       }
     } else if (isEndReached) {
       setIsEndReached(false)
@@ -179,6 +225,7 @@ const Home = () => {
       y: 0,
       animated: true,
     })
+    setShowScrollUp(false)
   }
   return (
     <View style={{ flex: 1, paddingTop: paddingTop }}>
@@ -248,12 +295,23 @@ const Home = () => {
           {data.length > 0 && <ImageGrid data={data} route={route} />}
         </View>
         {/** loader */}
-        <View
-          style={{ marginBottom: 70, marginTop: data?.length > 0 ? 10 : 70 }}
-        >
-          <ActivityIndicator size={'large'} color={theme.colors.black} />
-        </View>
+        {isLoading && (
+          <View
+            style={{ marginBottom: 70, marginTop: data?.length > 0 ? 10 : 70 }}
+          >
+            <ActivityIndicator size={'large'} color={theme.colors.black} />
+          </View>
+        )}
       </ScrollView>
+      {showScrollUp && (
+        <Animated.View entering={FadeInDown.delay(100).springify()}>
+          <TouchableOpacity style={style.scrollUp} onPress={handleScrollUp}>
+            <Feather name="arrow-up" size={22} color="white" />
+            <Text style={style.scrollText}>Back to Top</Text>
+          </TouchableOpacity>
+        </Animated.View>
+      )}
+
       {/** filter model */}
       <FiltersModal
         modalRef={modalRef}
@@ -267,38 +325,4 @@ const Home = () => {
   )
 }
 
-const style = StyleSheet.create({
-  headerContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginHorizontal: wp(4),
-    justifyContent: 'space-between',
-  },
-  pixel: {
-    fontWeight: theme.fontWeight.bold,
-    color: theme.colors.neutral(0.9),
-    fontSize: hp(3.5),
-    letterSpacing: 1,
-  },
-  searchContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginHorizontal: 15,
-    borderWidth: 1,
-    backgroundColor: theme.colors.white,
-    borderColor: theme.colors.white,
-    padding: 7,
-    paddingLeft: 10,
-    marginTop: 18,
-    borderRadius: theme.radius.lg,
-  },
-  inputContainer: { padding: 7 },
-  input: { flex: 1, paddingHorizontal: 2 },
-  crossIcon: {
-    backgroundColor: theme.colors.neutral(0.1),
-    borderRadius: theme.radius.sm,
-    padding: 5,
-  },
-})
 export default Home
