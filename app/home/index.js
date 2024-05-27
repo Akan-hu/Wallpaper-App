@@ -5,6 +5,7 @@ import {
   StyleSheet,
   ScrollView,
   TextInput,
+  ActivityIndicator,
 } from 'react-native'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { Feather, FontAwesome6, Ionicons } from '@expo/vector-icons'
@@ -16,6 +17,9 @@ import ImageGrid from '../component/imageGrid'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { debounce } from 'lodash'
 import FiltersModal from '../component/filtersModal'
+import AppliedFilters from '../component/AppliedFilters'
+import { useRoute } from '@react-navigation/native'
+import { useRouter } from 'expo-router'
 let PAGE = 1
 const Home = () => {
   const [searchText, setSearchText] = useState('')
@@ -24,6 +28,9 @@ const Home = () => {
   const [data, setData] = useState([])
   const [filters, setFilters] = useState(null)
   const modalRef = useRef(null)
+  const scrollRef = useRef(null)
+  const [isEndReached, setIsEndReached] = useState(false)
+  const route = useRouter()
 
   const handleChangeCategory = (title) => {
     clearSearch()
@@ -41,9 +48,9 @@ const Home = () => {
   useEffect(() => {
     fetchImages()
   }, [])
-  const fetchImages = async (params = { page: 1 }, append = false) => {
+  const fetchImages = async (params = { page: 1 }, append = true) => {
     let res = await apiCall(params)
-
+    console.log(res?.data?.hits?.length)
     if (res.success == true && res?.data?.hits) {
       if (append) {
         {
@@ -51,6 +58,7 @@ const Home = () => {
         This uses the spread operator (...) to create a new array that combines the existing data array with the new data from res.data.hits. 
         */
         }
+        console.log('if append ', append)
         setData([...data, ...res?.data?.hits])
       } else {
         //replace the existing data with the new data.
@@ -74,7 +82,7 @@ const Home = () => {
       setData([])
       fetchImages({ PAGE, q: text, ...filters }, false)
     }
-    console.log(text)
+
     if (text == '') {
       inputRef?.current?.clear()
       setSearchText('')
@@ -127,17 +135,70 @@ const Home = () => {
     }
     closeModel()
   }
+
+  const removeCurrentFilter = (filterName) => {
+    let filterObj = { ...filters }
+    delete filterObj[filterName]
+    setFilters({ ...filterObj })
+    page = 1
+    setData([])
+    let params = {
+      page,
+      ...filterObj,
+    }
+    if (activeCategory) params.category = activeCategory
+    if (searchText) params.q = searchText
+    fetchImages(params, false)
+  }
+
+  const handleScroll = (e) => {
+    const contentHeight = e.nativeEvent.contentSize.height
+    const scrollViewHeight = e.nativeEvent.layoutMeasurement.height
+    const scrollOffSet = e.nativeEvent.contentOffset.y
+    const bottomPosition = contentHeight - scrollViewHeight
+
+    // Pagination
+    if (scrollOffSet >= bottomPosition - 1) {
+      if (!isEndReached) {
+        setIsEndReached(true) //state is used so that API does't call multiple times
+        ++PAGE
+        let params = {
+          PAGE,
+          ...filters,
+        }
+        if (activeCategory) params.category = activeCategory
+        if (searchText) params.q = searchText
+        fetchImages(params, true)
+      }
+    } else if (isEndReached) {
+      setIsEndReached(false)
+    }
+  }
+  const handleScrollUp = () => {
+    scrollRef.current?.scrollTo({
+      y: 0,
+      animated: true,
+    })
+  }
   return (
     <View style={{ flex: 1, paddingTop: paddingTop }}>
       {/* <StatusBar style="light" /> */}
       {/** Header */}
       <View style={style.headerContainer}>
-        <Text style={style.pixel}>Find Wallpapers</Text>
-        <Pressable onPress={openModel}>
+        <Pressable onPress={handleScrollUp}>
+          <Text style={style.pixel}>Find Wallpapers</Text>
+        </Pressable>
+
+        <Pressable onPress={openModel} style={{ padding: 10 }}>
           <FontAwesome6 name="bars-staggered" size={24} color="black" />
         </Pressable>
       </View>
-      <ScrollView>
+      <ScrollView
+        onScroll={handleScroll}
+        scrollEventThrottle={5} //how often scroll event will fire while scrolling (in ms)
+        ref={scrollRef}
+        contentContainerStyle={{ gap: 15 }}
+      >
         <View style={style.searchContainer}>
           <View style={style.inputContainer}>
             <Feather
@@ -174,9 +235,23 @@ const Home = () => {
             handleChangeCategory={handleChangeCategory}
           />
         </View>
+
+        {/** Applied filters */}
+        {filters && (
+          <AppliedFilters
+            filters={filters}
+            removeCurrentFilter={removeCurrentFilter}
+          />
+        )}
         {/** images masonry grid */}
-        <View style={{ marginTop: 15 }}>
-          {data.length > 0 && <ImageGrid data={data} />}
+        <View>
+          {data.length > 0 && <ImageGrid data={data} route={route} />}
+        </View>
+        {/** loader */}
+        <View
+          style={{ marginBottom: 70, marginTop: data?.length > 0 ? 10 : 70 }}
+        >
+          <ActivityIndicator size={'large'} color={theme.colors.black} />
         </View>
       </ScrollView>
       {/** filter model */}

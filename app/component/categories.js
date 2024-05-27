@@ -51,7 +51,6 @@ const style = StyleSheet.create({
     borderColor: theme.colors.grayBG,
     borderRadius: theme.radius.lg,
     borderCurve: 'continuous',
-    marginTop: 15,
   }),
   title: (isActive) => ({
     fontSize: hp(1.7),

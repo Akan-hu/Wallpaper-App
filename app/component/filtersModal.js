@@ -1,8 +1,9 @@
-import { View, Text, StyleSheet, Pressable } from 'react-native'
+import { View, Text, StyleSheet, Pressable, Dimensions } from 'react-native'
 import React, { useMemo } from 'react'
 import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet'
 import Animated, {
   Extrapolation,
+  FadeInDown,
   interpolate,
   useAnimatedStyle,
 } from 'react-native-reanimated'
@@ -20,8 +21,9 @@ const FiltersModal = (props) => {
     clearFilter,
     applyFilter,
   } = props || {}
+  const height = Dimensions.get('window').height
   // variables
-  const snapPoints = useMemo(() => ['75%'], [])
+  const snapPoints = useMemo(() => ['70%', '85%'], [])
   return (
     <BottomSheetModal
       ref={modalRef}
@@ -38,7 +40,12 @@ const FiltersModal = (props) => {
             let sectionData = filtersData?.[sectionName]
 
             return (
-              <View key={index}>
+              <Animated.View
+                key={index}
+                entering={FadeInDown.delay(index * 100 + 100)
+                  .springify()
+                  .damping(11)}
+              >
                 <SectionVIew
                   title={sectionName}
                   content={sectionView({
@@ -48,10 +55,14 @@ const FiltersModal = (props) => {
                     setFilters,
                   })}
                 />
-              </View>
+              </Animated.View>
             )
           })}
-          <View style={styles.buttonView}>
+
+          <Animated.View
+            entering={FadeInDown.delay(500).springify().damping(11)}
+            style={styles.buttonView}
+          >
             <Pressable style={styles.applyBtn} onPress={applyFilter}>
               <Text style={styles.textApply}>Apply</Text>
             </Pressable>
@@ -61,7 +72,7 @@ const FiltersModal = (props) => {
                 Reset
               </Text>
             </Pressable>
-          </View>
+          </Animated.View>
         </View>
       </BottomSheetView>
     </BottomSheetModal>

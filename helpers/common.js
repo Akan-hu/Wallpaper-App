@@ -1,4 +1,4 @@
-import { Dimensions } from 'react-native'
+import { Dimensions, Platform } from 'react-native'
 
 const { width: deviceWidth, height: deviceHeight } = Dimensions.get('window')
 
@@ -19,6 +19,9 @@ export const getImageSize = (height, width) => {
   } else {
     return 200
   }
+}
+export const isIOS = () => {
+  return Platform.OS === 'ios'
 }
 export const capatalizeFirstChar = (str) => {
   let firstChar = str.charAt(0).toUpperCase()
